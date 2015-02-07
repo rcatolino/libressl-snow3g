@@ -70,25 +70,31 @@
 extern "C" {
 #endif
 
+struct snow_key_st {
+  uint32_t key[4];
+  uint32_t iv[4];
+};
+
 struct fsm_st {
   uint32_t r1;
   uint32_t r2;
   uint32_t r3;
 };
 
-struct snow_key_st {
+typedef struct snow_ctx_st {
   uint32_t lfsr[SNOW_KEY_SIZE];
   struct fsm_st fsm;
-};
-
-typedef struct snow_key_st SNOW_KEY;
-
-int
-SNOW_set_key(const unsigned char *userKey, const unsigned char *IV,
-    SNOW_KEY *key);
+} snow_ctx;
 
 void
-SNOW_gen_keystream(uint32_t *stream, size_t nb_word, SNOW_KEY *key);
+SNOW_set_key(struct snow_key_st, snow_ctx *ctx);
+
+void
+SNOW_gen_keystream(uint32_t *stream, size_t nb_word, snow_ctx *ctx);
+
+void
+SNOW_init(uint32_t countc, uint8_t bearer, uint8_t direction, const char *key,
+    snow_ctx *ctx);
 
 #ifdef  __cplusplus
 }

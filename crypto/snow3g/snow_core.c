@@ -724,11 +724,11 @@ S2(uint32_t in)
 
 /* Clocking operations */
 void
-lfsr_init(uint32_t f, SNOW_KEY *key)
+lfsr_init(uint32_t f, snow_ctx *ctx)
 {
-  uint32_t s0 = key->lfsr[0];
-  uint32_t s1 = key->lfsr[1];
-  uint32_t s2 = key->lfsr[2];
+  uint32_t s0 = ctx->lfsr[0];
+  uint32_t s1 = ctx->lfsr[1];
+  uint32_t s2 = ctx->lfsr[2];
   uint32_t v = (
       ((s0 << 8) & 0xffffff00) ^
       MULalpha[BYTE32(s0, 0)] ^
@@ -738,29 +738,29 @@ lfsr_init(uint32_t f, SNOW_KEY *key)
       f
   );
   // TODO replace shift with memmove ?
-  key->lfsr[0] = key->lfsr[1];
-  key->lfsr[1] = key->lfsr[2];
-  key->lfsr[2] = key->lfsr[3];
-  key->lfsr[3] = key->lfsr[4];
-  key->lfsr[4] = key->lfsr[5];
-  key->lfsr[5] = key->lfsr[6];
-  key->lfsr[6] = key->lfsr[7];
-  key->lfsr[7] = key->lfsr[8];
-  key->lfsr[8] = key->lfsr[9];
-  key->lfsr[9] = key->lfsr[10];
-  key->lfsr[10] = key->lfsr[11];
-  key->lfsr[11] = key->lfsr[12];
-  key->lfsr[12] = key->lfsr[13];
-  key->lfsr[13] = key->lfsr[14];
-  key->lfsr[14] = key->lfsr[15];
-  key->lfsr[15] = v;
+  ctx->lfsr[0] = ctx->lfsr[1];
+  ctx->lfsr[1] = ctx->lfsr[2];
+  ctx->lfsr[2] = ctx->lfsr[3];
+  ctx->lfsr[3] = ctx->lfsr[4];
+  ctx->lfsr[4] = ctx->lfsr[5];
+  ctx->lfsr[5] = ctx->lfsr[6];
+  ctx->lfsr[6] = ctx->lfsr[7];
+  ctx->lfsr[7] = ctx->lfsr[8];
+  ctx->lfsr[8] = ctx->lfsr[9];
+  ctx->lfsr[9] = ctx->lfsr[10];
+  ctx->lfsr[10] = ctx->lfsr[11];
+  ctx->lfsr[11] = ctx->lfsr[12];
+  ctx->lfsr[12] = ctx->lfsr[13];
+  ctx->lfsr[13] = ctx->lfsr[14];
+  ctx->lfsr[14] = ctx->lfsr[15];
+  ctx->lfsr[15] = v;
 }
 
-void lfsr_keystream(SNOW_KEY *key)
+void lfsr_ctxstream(snow_ctx *ctx)
 {
-  uint32_t s0 = key->lfsr[0];
-  uint32_t s2 = key->lfsr[2];
-  uint32_t s11 = key->lfsr[11];
+  uint32_t s0 = ctx->lfsr[0];
+  uint32_t s2 = ctx->lfsr[2];
+  uint32_t s11 = ctx->lfsr[11];
   uint32_t v = (
       ((s0 << 8) & 0xffffff00) ^
       MULalpha[BYTE32(s0, 0)] ^
@@ -769,32 +769,32 @@ void lfsr_keystream(SNOW_KEY *key)
       DIValpha[BYTE32(s11, 3)]
   );
 
-  key->lfsr[0] = key->lfsr[1];
-  key->lfsr[1] = key->lfsr[2];
-  key->lfsr[2] = key->lfsr[3];
-  key->lfsr[3] = key->lfsr[4];
-  key->lfsr[4] = key->lfsr[5];
-  key->lfsr[5] = key->lfsr[6];
-  key->lfsr[6] = key->lfsr[7];
-  key->lfsr[7] = key->lfsr[8];
-  key->lfsr[8] = key->lfsr[9];
-  key->lfsr[9] = key->lfsr[10];
-  key->lfsr[10] = key->lfsr[11];
-  key->lfsr[11] = key->lfsr[12];
-  key->lfsr[12] = key->lfsr[13];
-  key->lfsr[13] = key->lfsr[14];
-  key->lfsr[14] = key->lfsr[15];
-  key->lfsr[15] = v;
+  ctx->lfsr[0] = ctx->lfsr[1];
+  ctx->lfsr[1] = ctx->lfsr[2];
+  ctx->lfsr[2] = ctx->lfsr[3];
+  ctx->lfsr[3] = ctx->lfsr[4];
+  ctx->lfsr[4] = ctx->lfsr[5];
+  ctx->lfsr[5] = ctx->lfsr[6];
+  ctx->lfsr[6] = ctx->lfsr[7];
+  ctx->lfsr[7] = ctx->lfsr[8];
+  ctx->lfsr[8] = ctx->lfsr[9];
+  ctx->lfsr[9] = ctx->lfsr[10];
+  ctx->lfsr[10] = ctx->lfsr[11];
+  ctx->lfsr[11] = ctx->lfsr[12];
+  ctx->lfsr[12] = ctx->lfsr[13];
+  ctx->lfsr[13] = ctx->lfsr[14];
+  ctx->lfsr[14] = ctx->lfsr[15];
+  ctx->lfsr[15] = v;
 }
 
 uint32_t
-clock_fsm(SNOW_KEY *key) {
-  uint32_t f = (key->lfsr[15] + key->fsm.r1) ^ key->fsm.r2;
-  uint32_t r = key->fsm.r2 + (key->fsm.r3 ^ key->lfsr[5]);
+clock_fsm(snow_ctx *ctx) {
+  uint32_t f = (ctx->lfsr[15] + ctx->fsm.r1) ^ ctx->fsm.r2;
+  uint32_t r = ctx->fsm.r2 + (ctx->fsm.r3 ^ ctx->lfsr[5]);
 
-  key->fsm.r3 = S2(key->fsm.r2);
-  key->fsm.r2 = S1(key->fsm.r1);
-  key->fsm.r1 = r;
+  ctx->fsm.r3 = S2(ctx->fsm.r2);
+  ctx->fsm.r2 = S1(ctx->fsm.r1);
+  ctx->fsm.r1 = r;
 
   return f;
 }
@@ -806,62 +806,67 @@ clock_fsm(SNOW_KEY *key) {
  */
 #define WORD_128(array, i) htobe32(((uint32_t *)array)[i]);
 
-int
-SNOW_set_key(const unsigned char *userKey, const unsigned char *IV,
-    SNOW_KEY *key)
+void
+SNOW_set_key(struct snow_key_st key, snow_ctx *ctx)
 {
-  assert(key != NULL);
-  assert(userKey != NULL);
-  assert(IV != NULL);
-
+  assert(ctx!= NULL);
   int i = 0;
-  uint32_t k0 = WORD_128(userKey, 0);
-  uint32_t k1 = WORD_128(userKey, 1);
-  uint32_t k2 = WORD_128(userKey, 2);
-  uint32_t k3 = WORD_128(userKey, 3);
-  uint32_t iv0 = WORD_128(IV, 0);
-  uint32_t iv1 = WORD_128(IV, 1);
-  uint32_t iv2 = WORD_128(IV, 2);
-  uint32_t iv3 = WORD_128(IV, 3);
 
-  memset(key, 0, sizeof(*key));
-  key->lfsr[15] = k3 ^ iv0;
-  key->lfsr[14] = k2;
-  key->lfsr[13] = k1;
-  key->lfsr[12] = k0 ^ iv1;
-  key->lfsr[11] = k3 ^ ONE;
-  key->lfsr[10] = k2 ^ ONE ^ iv2;
-  key->lfsr[9] = k1 ^ ONE ^ iv3;
-  key->lfsr[8] = k0 ^ ONE;
-  key->lfsr[7] = k3;
-  key->lfsr[6] = k2;
-  key->lfsr[5] = k1;
-  key->lfsr[4] = k0;
-  key->lfsr[3] = k3 ^ ONE;
-  key->lfsr[2] = k2 ^ ONE;
-  key->lfsr[1] = k1 ^ ONE;
-  key->lfsr[0] = k0 ^ ONE;
+  memset(ctx, 0, sizeof(*ctx));
+  ctx->lfsr[15] = key.key[3] ^ key.iv[0];
+  ctx->lfsr[14] = key.key[2];
+  ctx->lfsr[13] = key.key[1];
+  ctx->lfsr[12] = key.key[0] ^ key.iv[1];
+  ctx->lfsr[11] = key.key[3] ^ ONE;
+  ctx->lfsr[10] = key.key[2] ^ ONE ^ key.iv[2];
+  ctx->lfsr[9] = key.key[1] ^ ONE ^ key.iv[3];
+  ctx->lfsr[8] = key.key[0] ^ ONE;
+  ctx->lfsr[7] = key.key[3];
+  ctx->lfsr[6] = key.key[2];
+  ctx->lfsr[5] = key.key[1];
+  ctx->lfsr[4] = key.key[0];
+  ctx->lfsr[3] = key.key[3] ^ ONE;
+  ctx->lfsr[2] = key.key[2] ^ ONE;
+  ctx->lfsr[1] = key.key[1] ^ ONE;
+  ctx->lfsr[0] = key.key[0] ^ ONE;
 
   for (i = 0; i < 32; i++) {
-    lfsr_init(clock_fsm(key), key);
+    lfsr_init(clock_fsm(ctx), ctx);
   }
-
-  return 0;
 }
 
 void
-SNOW_gen_keystream(uint32_t *stream, size_t nb_word, SNOW_KEY *key)
+SNOW_gen_keystream(uint32_t *stream, size_t nb_word, snow_ctx *ctx)
 {
   size_t i = 1;
-  assert(key != NULL);
+  assert(ctx != NULL);
   assert(stream != NULL);
-  clock_fsm(key);
-  lfsr_keystream(key);
+  clock_fsm(ctx);
+  lfsr_ctxstream(ctx);
 
   for (i = 1; i < nb_word; i++) {
-    stream[i] = clock_fsm(key) ^ key->lfsr[0];
-    lfsr_keystream(key);
+    stream[i] = clock_fsm(ctx) ^ ctx->lfsr[0];
+    lfsr_ctxstream(ctx);
   }
 
 }
 
+void
+SNOW_init(uint32_t countc, uint8_t bearer, uint8_t direction, const char *key,
+    snow_ctx *ctx)
+{
+  assert(ctx != NULL);
+  struct snow_key_st snow_key;
+  memset(&key, 0, sizeof(key));
+  snow_key.key[3] = WORD_128(key, 0);
+  snow_key.key[2] = WORD_128(key, 1);
+  snow_key.key[1] = WORD_128(key, 2);
+  snow_key.key[0] = WORD_128(key, 3);
+
+  snow_key.iv[3] = countc;
+  snow_key.iv[2] = ((bearer & 0x1F) << 3) | ((direction & 0x01) << 2);
+  snow_key.iv[1] = snow_key.iv[3];
+  snow_key.iv[0] = snow_key.iv[2];
+
+  SNOW_set_key(snow_key, ctx);
+}
