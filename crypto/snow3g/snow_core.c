@@ -1,4 +1,5 @@
 /* $OpenBSD: snow_core.c,v 0.10 2015 raphael.catolino@gmail.com$ */
+
 /**
  * snow 3g stream cipher.
  *
@@ -15,6 +16,13 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/* Implementation of the 3GPP UEA2 & UIA2 algorithm, aka snow-3g stream cipher.
+ * The specification can be found at :
+ * http://www.gsma.com/technicalprojects/wp-content/uploads/2012/04/snow3gspec.pdf
+ * The test vectors can be found at :
+ * http://www.gsma.com/technicalprojects/wp-content/uploads/2012/04/Doc3-UEA2-UIA2-Spec-Implementors-Test-Data.pdf
  */
 
 #include <assert.h>
@@ -561,6 +569,11 @@ static const uint32_t S2_T3[256] = {
   0x121b0909U, 0xc919d0d0U, 0x8979f0f0U, 0x65e38686U,
 };
 
+/*
+static const uint32_t MULalpha[256] = {
+};
+*/
+
 /* Primitives */
 uint8_t
 MULx(uint8_t v, uint8_t c)
@@ -582,26 +595,21 @@ MULxPOW(uint8_t v, uint32_t i, uint8_t c)
   return MULx(MULxPOW(v, i-1, c), c);
 }
 
+/* Get the i most significant byte out of a 32 bit word */
+#define BYTE32(word, i) ((uint8_t*) &htole32(word))[3-i]
+
 uint32_t
 S1(uint32_t in)
 {
-  return S1_T0(BYTE(in, 3) ^ S1_T1(BYTE(in, 2)) ^
-    S1_T2(BYTE(in, 1)) ^ S1_T3(BYTE(in, 0));
+  return S1_T0[BYTE32(in, 3)] ^ S1_T1[BYTE32(in, 2)] ^
+    S1_T2[BYTE32(in, 1)] ^ S1_T3[BYTE32(in, 0)];
 }
 
 uint32_t
 S2(uint32_t in)
 {
-}
-
-uint32_t
-MULalpha(uint8_t c)
-{
-}
-
-uint32_t
-DIValpha(uint8_t c)
-{
+  return S2_T0[BYTE32(in, 3)] ^ S2_T1[BYTE32(in, 2)] ^
+    S2_T2[BYTE32(in, 1)] ^ S1_T2[BYTE32(in, 0)];
 }
 
 /* Public API */
