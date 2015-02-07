@@ -18,7 +18,7 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Implementation of the 3GPP UEA2 & UIA2 algorithm, aka snow-3g stream cipher.
+/* Implementation of the 3GPP UEA2 algorithm, aka the snow-3g stream cipher.
  * The specification can be found at :
  * http://www.gsma.com/technicalprojects/wp-content/uploads/2012/04/snow3gspec.pdf
  * The test vectors can be found at :
@@ -28,6 +28,7 @@
 #include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 #include <openssl/snow3g.h>
 
 /* Base components used in snow 3g specification */
@@ -704,26 +705,6 @@ static const uint32_t DIValpha[256] = {
 };
 
 /* Primitives */
-uint8_t
-MULx(uint8_t v, uint8_t c)
-{
-  if (v & 0x80) {
-    return (v << 1) ^ c;
-  }
-
-  return v << 1;
-}
-
-uint8_t
-MULxPOW(uint8_t v, uint32_t i, uint8_t c)
-{
-  if (i == 0) {
-    return v;
-  }
-
-  return MULx(MULxPOW(v, i-1, c), c);
-}
-
 /* Get the i most significant byte out of a 32 bit word */
 #define BYTE32(word, i) ((uint8_t*) &htole32(word))[3-i]
 
@@ -806,18 +787,81 @@ void lfsr_keystream(SNOW_KEY *key)
   key->lfsr[15] = v;
 }
 
+uint32_t
+clock_fsm(SNOW_KEY *key) {
+  uint32_t f = (key->lfsr[15] + key->fsm.r1) ^ key->fsm.r2;
+  uint32_t r = key->fsm.r2 + (key->fsm.r3 ^ key->lfsr[5]);
+
+  key->fsm.r3 = S2(key->fsm.r2);
+  key->fsm.r2 = S1(key->fsm.r1);
+  key->fsm.r1 = r;
+
+  return f;
+}
+
 /* Public API */
+#define ONE 0xffffffff
+/* reinterpret a char array as big-endian 32 bit unsigned integer array
+ * and select the element at index i.
+ */
+#define WORD_128(array, i) htobe32(((uint32_t *)array)[i]);
 
 int
-SNOW_set_key(const unsigned char *userKey, SNOW_KEY *key)
+SNOW_set_key(const unsigned char *userKey, const unsigned char *IV,
+    SNOW_KEY *key)
 {
-  return -1;
+  assert(key != NULL);
+  assert(userKey != NULL);
+  assert(IV != NULL);
+
+  int i = 0;
+  uint32_t k0 = WORD_128(userKey, 0);
+  uint32_t k1 = WORD_128(userKey, 1);
+  uint32_t k2 = WORD_128(userKey, 2);
+  uint32_t k3 = WORD_128(userKey, 3);
+  uint32_t iv0 = WORD_128(IV, 0);
+  uint32_t iv1 = WORD_128(IV, 1);
+  uint32_t iv2 = WORD_128(IV, 2);
+  uint32_t iv3 = WORD_128(IV, 3);
+
+  memset(key, 0, sizeof(*key));
+  key->lfsr[15] = k3 ^ iv0;
+  key->lfsr[14] = k2;
+  key->lfsr[13] = k1;
+  key->lfsr[12] = k0 ^ iv1;
+  key->lfsr[11] = k3 ^ ONE;
+  key->lfsr[10] = k2 ^ ONE ^ iv2;
+  key->lfsr[9] = k1 ^ ONE ^ iv3;
+  key->lfsr[8] = k0 ^ ONE;
+  key->lfsr[7] = k3;
+  key->lfsr[6] = k2;
+  key->lfsr[5] = k1;
+  key->lfsr[4] = k0;
+  key->lfsr[3] = k3 ^ ONE;
+  key->lfsr[2] = k2 ^ ONE;
+  key->lfsr[1] = k1 ^ ONE;
+  key->lfsr[0] = k0 ^ ONE;
+
+  for (i = 0; i < 32; i++) {
+    lfsr_init(clock_fsm(key), key);
+  }
+
+  return 0;
 }
 
 void
-SNOW(const unsigned char *in, unsigned char *out, const SNOW_KEY *key)
+SNOW_gen_keystream(uint32_t *stream, size_t nb_word, SNOW_KEY *key)
 {
+  size_t i = 1;
   assert(key != NULL);
-}
+  assert(stream != NULL);
+  clock_fsm(key);
+  lfsr_keystream(key);
 
+  for (i = 1; i < nb_word; i++) {
+    stream[i] = clock_fsm(key) ^ key->lfsr[0];
+    lfsr_keystream(key);
+  }
+
+}
 

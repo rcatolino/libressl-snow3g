@@ -77,16 +77,18 @@ struct fsm_st {
 };
 
 struct snow_key_st {
-  unsigned char snow_key[SNOW_KEY_SIZE];
-  uint8_t lfsr[SNOW_KEY_SIZE];
+  uint32_t lfsr[SNOW_KEY_SIZE];
   struct fsm_st fsm;
 };
 
 typedef struct snow_key_st SNOW_KEY;
 
-int SNOW_set_key(const unsigned char *userKey, SNOW_KEY *key);
+int
+SNOW_set_key(const unsigned char *userKey, const unsigned char *IV,
+    SNOW_KEY *key);
 
-void SNOW(const unsigned char *in, unsigned char *out, const SNOW_KEY *key);
+void
+SNOW_gen_keystream(uint32_t *stream, size_t nb_word, SNOW_KEY *key);
 
 #ifdef  __cplusplus
 }
