@@ -836,22 +836,6 @@ SNOW_set_key(struct snow_key_st key, snow_ctx *ctx)
 }
 
 void
-SNOW_gen_keystream(uint32_t *stream, size_t nb_word, snow_ctx *ctx)
-{
-  size_t i = 1;
-  assert(ctx != NULL);
-  assert(stream != NULL);
-  clock_fsm(ctx);
-  lfsr_ctxstream(ctx);
-
-  for (i = 1; i < nb_word; i++) {
-    stream[i] = clock_fsm(ctx) ^ ctx->lfsr[0];
-    lfsr_ctxstream(ctx);
-  }
-
-}
-
-void
 SNOW_init(uint32_t countc, uint8_t bearer, uint8_t direction, const char *key,
     snow_ctx *ctx)
 {
@@ -869,4 +853,56 @@ SNOW_init(uint32_t countc, uint8_t bearer, uint8_t direction, const char *key,
   snow_key.iv[0] = snow_key.iv[2];
 
   SNOW_set_key(snow_key, ctx);
+}
+
+void
+SNOW_gen_keystream(uint32_t *stream, size_t nb_word, snow_ctx *ctx)
+{
+  size_t i = 0;
+  assert(ctx != NULL);
+  assert(stream != NULL);
+  clock_fsm(ctx);
+  lfsr_ctxstream(ctx);
+
+  for (i = 0; i < nb_word; i++) {
+    stream[i] = clock_fsm(ctx) ^ ctx->lfsr[0];
+    lfsr_ctxstream(ctx);
+  }
+}
+
+void
+SNOW(size_t nb_bit, const unsigned char *in, unsigned char *out, snow_ctx *ctx)
+{
+  size_t i = 0;
+  size_t nb_word = nb_bit/32;
+  size_t r = nb_bit % 32;
+  uint32_t *in_word = (uint32_t*) in;
+  uint32_t *out_word = (uint32_t*) out;
+  assert(ctx != NULL);
+  assert(in!= NULL);
+  assert(out!= NULL);
+  clock_fsm(ctx);
+  lfsr_ctxstream(ctx);
+
+  for (i = 0; i < nb_word; i++) {
+    uint32_t f;
+    f = clock_fsm(ctx) ^ ctx->lfsr[0];
+    out_word[i] = in_word[i] ^ be32toh(f);
+    lfsr_ctxstream(ctx);
+  }
+
+  if (r) {
+    uint32_t f;
+    uint32_t last_out = 0;
+    uint32_t last_in = 0;
+    /* mask with the r most significant bits at 1, the rest at 0 */
+    uint32_t mask = ~((1 << (32 - r)) - 1);
+    size_t bytes_left = r / 8 + (r % 8 ? 1 : 0);
+
+    memcpy(&last_in, in, bytes_left);
+    f = clock_fsm(ctx) ^ ctx->lfsr[0];
+    last_out = htobe32((be32toh(last_in) ^ f) & mask);
+    memcpy(out+nb_word, &last_out, bytes_left);
+    lfsr_ctxstream(ctx);
+  }
 }
