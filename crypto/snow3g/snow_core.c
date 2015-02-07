@@ -743,7 +743,7 @@ S2(uint32_t in)
 
 /* Clocking operations */
 void
-init_lfsr(uint32_t f, SNOW_KEY *key)
+lfsr_init(uint32_t f, SNOW_KEY *key)
 {
   uint32_t s0 = key->lfsr[0];
   uint32_t s1 = key->lfsr[1];
@@ -757,6 +757,37 @@ init_lfsr(uint32_t f, SNOW_KEY *key)
       f
   );
   // TODO replace shift with memmove ?
+  key->lfsr[0] = key->lfsr[1];
+  key->lfsr[1] = key->lfsr[2];
+  key->lfsr[2] = key->lfsr[3];
+  key->lfsr[3] = key->lfsr[4];
+  key->lfsr[4] = key->lfsr[5];
+  key->lfsr[5] = key->lfsr[6];
+  key->lfsr[6] = key->lfsr[7];
+  key->lfsr[7] = key->lfsr[8];
+  key->lfsr[8] = key->lfsr[9];
+  key->lfsr[9] = key->lfsr[10];
+  key->lfsr[10] = key->lfsr[11];
+  key->lfsr[11] = key->lfsr[12];
+  key->lfsr[12] = key->lfsr[13];
+  key->lfsr[13] = key->lfsr[14];
+  key->lfsr[14] = key->lfsr[15];
+  key->lfsr[15] = v;
+}
+
+void lfsr_keystream(SNOW_KEY *key)
+{
+  uint32_t s0 = key->lfsr[0];
+  uint32_t s2 = key->lfsr[2];
+  uint32_t s11 = key->lfsr[11];
+  uint32_t v = (
+      ((s0 << 8) & 0xffffff00) ^
+      MULalpha[BYTE32(s0, 0)] ^
+      s2 ^
+      ((s11 >> 8) & 0x00ffffff) ^
+      DIValpha[BYTE32(s11, 3)]
+  );
+
   key->lfsr[0] = key->lfsr[1];
   key->lfsr[1] = key->lfsr[2];
   key->lfsr[2] = key->lfsr[3];
