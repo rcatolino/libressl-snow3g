@@ -21,8 +21,6 @@
 /* Implementation of the 3GPP UEA2 algorithm, aka the snow-3g stream cipher.
  * The specification can be found at :
  * http://www.gsma.com/technicalprojects/wp-content/uploads/2012/04/snow3gspec.pdf
- * The test vectors can be found at :
- * http://www.gsma.com/technicalprojects/wp-content/uploads/2012/04/Doc3-UEA2-UIA2-Spec-Implementors-Test-Data.pdf
  */
 
 #include <assert.h>

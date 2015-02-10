@@ -1,0 +1,120 @@
+/* $OpenBSD: snow3gtest.c,v 0.10 2015 raphael.catolino@gmail.com$ */
+
+/**
+ * snow 3g stream cipher test.
+ *
+ * This code is hereby placed in the public domain.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHORS ''AS IS'' AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+ * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * The test vectors can be found at :
+ * http://www.gsma.com/technicalprojects/wp-content/uploads/2012/04/Doc3-UEA2-UIA2-Spec-Implementors-Test-Data.pdf
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <openssl/snow3g.h>
+
+struct snow_tv {
+  struct snow_key_st key;
+  uint32_t lfsr_before_init[SNOW_KEY_SIZE];
+  uint32_t lfsr_after_init[SNOW_KEY_SIZE];
+  struct fsm_st fsm_after_init;
+  // First words from keystream
+  uint32_t z1;
+  uint32_t z2;
+}
+
+struct snow_tv[] = {
+  {
+    {
+      0x9F45D62B, 0x00B3C582, 0x10492C95, 0x48FF8148,
+      0x144702EA, 0x844D5CAD, 0x259B1FDF, 0x5FF40B1C,
+    },
+    {
+      0x60BA29D4, 0xFF4C3A7D, 0xEFB6D36A, 0xB7007EB7,
+      0x9F45D62B, 0x00B3C582, 0x10492C95, 0x48FF8148,
+      0x60BA29D4, 0xA0B83161, 0xCA2DCCB5, 0xB7007EB7,
+      0x1B088A86, 0x00B3C582, 0x10492C95, 0x5CB883A2,
+    },
+    {
+      0xA615128F, 0x52A003E0, 0x29C94192, 0x8CBFD768,
+      0x2A4CBF16, 0x709DEF8D, 0x04173832, 0x6A34DD11,
+      0xEA818BE1, 0xFED4EB77, 0x0595ED57, 0xEFC0330C,
+      0x597B031A, 0x821E5997, 0x44CB1CA9, 0x4FE0487B,
+    },
+    {
+    },
+  },
+  {
+    {
+      0x2C3EE38C, 0xFCB5C0C3, 0xA6E83D1F, 0xF3B166DC,
+      0x92D5C5D3, 0x1CB17F32, 0x881955DE, 0xB7F9B2CE,
+    },
+    {
+      0xD3C11C73, 0x034A3F3C, 0x5917C2E0, 0x0C4E9923,
+      0x2C3EE38C, 0xFCB5C0C3, 0xA6E83D1F, 0xF3B166DC,
+      0xD3C11C73, 0xB4B38DF2, 0xD10E973E, 0x0C4E9923,
+      0x308F9CBE, 0xFCB5C0C3, 0xA6E83D1F, 0x6164A30F,
+    },
+    {
+      0x29A9D604, 0x40142E94, 0xFED3AB82, 0xF4E93258,
+      0xA002975F, 0x812C7108, 0xB9C94C64, 0x13DEF6DB,
+      0xD0B1A5BA, 0x53DDE992, 0x6DFAE2A2, 0xAA6569CE,
+      0x4ECDC002, 0x4F986D6E, 0xE7904A11, 0xDAF87952,
+    },
+    {
+    },
+  },
+  {
+    {
+      0x68C63540, 0xD1C6F80A, 0x6786FFA8, 0x134071B1,
+      0x9840A562, 0xB7F9A61B, 0xE7B09245, 0x1BF79086,
+    },
+    {
+      0x9739CABF, 0x2E3907F5, 0x98790057, 0xECBF8E4E,
+      0x68C63540, 0xD1C6F80A, 0x6786FFA8, 0x134071B1,
+      0x9739CABF, 0x35CE9773, 0x7FC99212, 0xECBF8E4E,
+      0xDF3F935B, 0xD1C6F80A, 0x6786FFA8, 0x8B00D4D3,
+    },
+    {
+      0xD8BAAFFE, 0x0A05111B, 0x14807023, 0xDB9484AC,
+      0x31D497ED, 0xB359BBDB, 0x0500D36C, 0x0564C37E,
+      0xAC020FB2, 0x357740EB, 0x0E1AE450, 0xC1ABA8FF,
+      0xA70048EB, 0x9D74E6D4, 0xFE52C4D1, 0x53312AA9,
+    },
+  },
+};
+
+int test_snow_full(struct snow_tv *tv)
+{
+  int failed = 0;
+  return failed;
+}
+
+int test_set_1(struct snow_tv *tv)
+{
+  int failed = 0;
+  return failed;
+}
+
+int
+main(int argc, char **argv)
+{
+  int failed = 0;
+  return failed;
+}
