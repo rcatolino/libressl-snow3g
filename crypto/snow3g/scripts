@@ -7,3 +7,6 @@ cat test-key | sed -e 's/^\s*//;s/\s//g' | sed -e 'N;N;N;N;s/\n/, /g' | sed -e '
 cat test-lfsr | sed -e '/^$/d' | sed -e 'N;N;N;s/\n/,/g;s/$/,/;s/^\s//;s/\s/ 0x/g;s/^/0x/'
 
 cat test-fsm | sed -e 's/^\s/0x/g;N;N;s/\n\s/, 0x/g' | sed -e 's/^/{ /;s/$/, },/'
+
+cat test-output | sed -e 's/\s//g;s/^/0x/' | sed -e 'N;s/\n/, /g' | sed -e 's/^/{ /;s/$/, },/'
+

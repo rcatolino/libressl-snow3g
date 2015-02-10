@@ -35,8 +35,7 @@ struct snow_tv {
   uint32_t lfsr_after_init[SNOW_KEY_SIZE];
   struct fsm_st fsm_after_init;
   // First words from keystream
-  uint32_t z1;
-  uint32_t z2;
+  uint32_t keystream[2];
 }
 
 struct snow_tv[] = {
@@ -58,8 +57,7 @@ struct snow_tv[] = {
       0x1A037B59, 0x97591E82, 0xA91CCB44, 0x7B48E04F,
     },
     { 0x61DA9249, 0x427DF38C, 0x0FB6B101, },
-    {
-    },
+    { 0xABEE9704, 0x7AC31373, },
   },
   {
     {
@@ -79,8 +77,7 @@ struct snow_tv[] = {
       0x02C0CD4E, 0x6E6D984F, 0x114A90E7, 0x5279F8DA,
     },
     { 0x65130120, 0xA14C7DBD, 0xB68B551A, },
-    {
-    },
+    { 0xEFF8A342, 0xF751480F, },
   },
   {
     {
@@ -100,6 +97,7 @@ struct snow_tv[] = {
       0xEB4800A7, 0xD4E6749D, 0xD1C452FE, 0xA92A3153,
     },
     { 0x6599AA50, 0x5EA9188B, 0xF41889FC, },
+    { 0xA8C874A9, 0x7AE7C4F8, },
   },
 };
 
