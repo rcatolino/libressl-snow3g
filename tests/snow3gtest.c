@@ -38,7 +38,7 @@ struct snow_tv {
   uint32_t keystream[2];
 };
 
-struct snow_tv tvs[] = {
+struct snow_tv snow_tvs[] = {
   {
     {
       { 0x2BD6459F, 0x82C5B300, 0x952C4910, 0x4881FF48, },
@@ -101,21 +101,50 @@ struct snow_tv tvs[] = {
   },
 };
 
-int test_snow_full(struct snow_tv *tv)
+#define N_VECTORS (sizeof(snow_tvs) / sizeof(*snow_tvs))
+
+int
+test_before_init(struct snow_tv *tv)
+{
+  return 0;
+}
+
+int
+test_snow_full(struct snow_tv *tv)
 {
   int failed = 0;
   return failed;
 }
 
-int test_set_1(struct snow_tv *tv)
+void
+print_lfsr(uint32_t *lfsr)
 {
-  int failed = 0;
-  return failed;
+  size_t i;
+  for (i = 0; i < SNOW_KEY_SIZE; i += 4) {
+    printf("0x%08X 0x%08X 0x%08X 0x%08X\n", lfsr[i], lfsr[i+1], lfsr[i+2], lfsr[i+3]);
+  }
 }
+
+void snow_init_lfsr_fsm(struct snow_key_st key, snow_ctx *ctx);
 
 int
 main(int argc, char **argv)
 {
+  size_t i;
   int failed = 0;
+
+	for (i = 0; i < N_VECTORS; i++) {
+    struct snow_tv *tv = snow_tvs+i;
+    snow_ctx ctx;
+    snow_init_lfsr_fsm(tv->key, &ctx);
+    if (memcmp(&ctx.lfsr, &tv->lfsr_before_init, sizeof(uint32_t)*SNOW_KEY_SIZE)) {
+      printf("Error, unexpected lfsr state before inititalization. Expected : \n");
+      print_lfsr(tv->lfsr_before_init);
+      printf("Got :\n");
+      print_lfsr(ctx.lfsr);
+      failed = -1;
+    }
+  }
+
   return failed;
 }

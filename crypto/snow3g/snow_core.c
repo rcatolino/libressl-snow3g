@@ -804,11 +804,9 @@ clock_fsm(snow_ctx *ctx) {
  */
 #define WORD_128(array, i) htobe32(((uint32_t *)array)[i]);
 
-void
-SNOW_set_key(struct snow_key_st key, snow_ctx *ctx)
+void snow_init_lfsr_fsm(struct snow_key_st key, snow_ctx *ctx)
 {
   assert(ctx!= NULL);
-  int i = 0;
 
   memset(ctx, 0, sizeof(*ctx));
   ctx->lfsr[15] = key.key[3] ^ key.iv[0];
@@ -827,7 +825,15 @@ SNOW_set_key(struct snow_key_st key, snow_ctx *ctx)
   ctx->lfsr[2] = key.key[2] ^ ONE;
   ctx->lfsr[1] = key.key[1] ^ ONE;
   ctx->lfsr[0] = key.key[0] ^ ONE;
+}
 
+void
+SNOW_set_key(struct snow_key_st key, snow_ctx *ctx)
+{
+  assert(ctx!= NULL);
+  int i = 0;
+
+  snow_init_lfsr_fsm(key, ctx);
   for (i = 0; i < 32; i++) {
     lfsr_init(clock_fsm(ctx), ctx);
   }
@@ -879,6 +885,8 @@ SNOW(size_t nb_bit, const unsigned char *in, unsigned char *out, snow_ctx *ctx)
   assert(ctx != NULL);
   assert(in!= NULL);
   assert(out!= NULL);
+
+  /* init */
   clock_fsm(ctx);
   lfsr_ctxstream(ctx);
 
@@ -889,6 +897,7 @@ SNOW(size_t nb_bit, const unsigned char *in, unsigned char *out, snow_ctx *ctx)
     lfsr_ctxstream(ctx);
   }
 
+  /* clocking */
   if (r) {
     uint32_t f;
     uint32_t last_out = 0;
