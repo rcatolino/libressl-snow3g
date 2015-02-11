@@ -717,7 +717,7 @@ uint32_t
 S2(uint32_t in)
 {
   return S2_T0[BYTE32(in, 3)] ^ S2_T1[BYTE32(in, 2)] ^
-    S2_T2[BYTE32(in, 1)] ^ S1_T2[BYTE32(in, 0)];
+    S2_T2[BYTE32(in, 1)] ^ S2_T3[BYTE32(in, 0)];
 }
 
 /* Clocking operations */
@@ -754,7 +754,8 @@ lfsr_init(uint32_t f, snow_ctx *ctx)
   ctx->lfsr[15] = v;
 }
 
-void lfsr_ctxstream(snow_ctx *ctx)
+void
+lfsr_keystream(snow_ctx *ctx)
 {
   uint32_t s0 = ctx->lfsr[0];
   uint32_t s2 = ctx->lfsr[2];
@@ -786,7 +787,8 @@ void lfsr_ctxstream(snow_ctx *ctx)
 }
 
 uint32_t
-clock_fsm(snow_ctx *ctx) {
+clock_fsm(snow_ctx *ctx)
+{
   uint32_t f = (ctx->lfsr[15] + ctx->fsm.r1) ^ ctx->fsm.r2;
   uint32_t r = ctx->fsm.r2 + (ctx->fsm.r3 ^ ctx->lfsr[5]);
 
@@ -866,11 +868,11 @@ SNOW_gen_keystream(uint32_t *stream, size_t nb_word, snow_ctx *ctx)
   assert(ctx != NULL);
   assert(stream != NULL);
   clock_fsm(ctx);
-  lfsr_ctxstream(ctx);
+  lfsr_keystream(ctx);
 
   for (i = 0; i < nb_word; i++) {
     stream[i] = clock_fsm(ctx) ^ ctx->lfsr[0];
-    lfsr_ctxstream(ctx);
+    lfsr_keystream(ctx);
   }
 }
 
@@ -888,13 +890,13 @@ SNOW(size_t nb_bit, const unsigned char *in, unsigned char *out, snow_ctx *ctx)
 
   /* init */
   clock_fsm(ctx);
-  lfsr_ctxstream(ctx);
+  lfsr_keystream(ctx);
 
   for (i = 0; i < nb_word; i++) {
     uint32_t f;
     f = clock_fsm(ctx) ^ ctx->lfsr[0];
     out_word[i] = in_word[i] ^ be32toh(f);
-    lfsr_ctxstream(ctx);
+    lfsr_keystream(ctx);
   }
 
   /* clocking */
@@ -910,6 +912,6 @@ SNOW(size_t nb_bit, const unsigned char *in, unsigned char *out, snow_ctx *ctx)
     f = clock_fsm(ctx) ^ ctx->lfsr[0];
     last_out = htobe32((be32toh(last_in) ^ f) & mask);
     memcpy(out+nb_word, &last_out, bytes_left);
-    lfsr_ctxstream(ctx);
+    lfsr_keystream(ctx);
   }
 }

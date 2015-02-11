@@ -32,6 +32,7 @@
 struct snow_tv {
   struct snow_key_st key;
   uint32_t lfsr_before_init[SNOW_KEY_SIZE];
+  struct fsm_st fsm_after_clock;
   uint32_t lfsr_after_init[SNOW_KEY_SIZE];
   struct fsm_st fsm_after_init;
   // First words from keystream
@@ -50,6 +51,7 @@ struct snow_tv snow_tvs[] = {
       0xD429BA60, 0x6131B8A0, 0xB5CC2DCA, 0xB77E00B7,
       0x868A081B, 0x82C5B300, 0x952C4910, 0xA283B85C,
     },
+    { 0x82C5B300, 0x63636363, 0x25252525, },
     {
       0x8F1215A6, 0xE003A052, 0x9241C929, 0x68D7BF8C,
       0x16BF4C2A, 0x8DEF9D70, 0x32381704, 0x11DD346A,
@@ -70,6 +72,7 @@ struct snow_tv snow_tvs[] = {
       0x731CC1D3, 0xF28DB3B4, 0x3E970ED1, 0x23994E0C,
       0xBE9C8F30, 0xC3C0B5FC, 0x1F3DE8A6, 0x0FA36461,
     },
+    { 0xC3C0B5FC, 0x63636363, 0x25252525, },
     {
       0x04D6A929, 0x942E1440, 0x82ABD3FE, 0x5832E9F4,
       0x5F9702A0, 0x08712C81, 0x644CC9B9, 0xDBF6DE13,
@@ -90,6 +93,7 @@ struct snow_tv snow_tvs[] = {
       0xBFCA3997, 0x7397CE35, 0x1292C97F, 0x4E8EBFEC,
       0x5B933FDF, 0x0AF8C6D1, 0xA8FF8667, 0xD3D4008B,
     },
+    { 0x0AF8C6D1, 0x63636363, 0x25252525, },
     {
       0xFEAFBAD8, 0x1B11050A, 0x23708014, 0xAC8494DB,
       0xED97D431, 0xDBBB59B3, 0x6CD30005, 0x7EC36405,
@@ -103,17 +107,9 @@ struct snow_tv snow_tvs[] = {
 
 #define N_VECTORS (sizeof(snow_tvs) / sizeof(*snow_tvs))
 
-int
-test_before_init(struct snow_tv *tv)
-{
-  return 0;
-}
-
-int
-test_snow_full(struct snow_tv *tv)
-{
-  int failed = 0;
-  return failed;
+void
+print_fsm(struct fsm_st fsm) {
+  printf("0x%08X 0x%08X 0x%08X\n", fsm.r1, fsm.r2, fsm.r3);
 }
 
 void
@@ -125,6 +121,7 @@ print_lfsr(uint32_t *lfsr)
   }
 }
 
+uint32_t clock_fsm(snow_ctx *ctx);
 void snow_init_lfsr_fsm(struct snow_key_st key, snow_ctx *ctx);
 
 int
@@ -140,6 +137,24 @@ main(int argc, char **argv)
     if (memcmp(&ctx.lfsr, &tv->lfsr_before_init, sizeof(uint32_t)*SNOW_KEY_SIZE)) {
       printf("Error, unexpected lfsr state before inititalization. Expected : \n");
       print_lfsr(tv->lfsr_before_init);
+      printf("Got :\n");
+      print_lfsr(ctx.lfsr);
+      failed = -1;
+    }
+
+    clock_fsm(&ctx);
+    if (memcmp(&ctx.fsm, &tv->fsm_after_clock, sizeof(struct fsm_st))) {
+      printf("Error, unexpected fsm state after first clocking. Expected : \n");
+      print_fsm(tv->fsm_after_clock);
+      printf("Got :\n");
+      print_fsm(ctx.fsm);
+      failed = -1;
+    }
+
+    SNOW_set_key(tv->key, &ctx);
+    if (memcmp(&ctx.lfsr, &tv->lfsr_after_init, sizeof(uint32_t)*SNOW_KEY_SIZE)) {
+      printf("Error, unexpected lfsr state after inititalization. Expected : \n");
+      print_lfsr(tv->lfsr_after_init);
       printf("Got :\n");
       print_lfsr(ctx.lfsr);
       failed = -1;
