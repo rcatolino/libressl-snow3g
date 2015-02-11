@@ -844,7 +844,7 @@ SNOW_init(uint32_t countc, uint8_t bearer, uint8_t direction, const char *key,
 {
   assert(ctx != NULL);
   struct snow_key_st snow_key;
-  memset(&key, 0, sizeof(key));
+  memset(&snow_key, 0, sizeof(key));
   snow_key.key[3] = WORD_128(key, 0);
   snow_key.key[2] = WORD_128(key, 1);
   snow_key.key[1] = WORD_128(key, 2);

@@ -29,6 +29,11 @@
 
 #include <openssl/snow3g.h>
 
+struct snow_tv2 {
+  struct snow_key_st key;
+  uint32_t z2500;
+};
+
 struct snow_tv {
   struct snow_key_st key;
   uint32_t lfsr_before_init[SNOW_KEY_SIZE];
@@ -37,6 +42,14 @@ struct snow_tv {
   struct fsm_st fsm_after_init;
   // First words from keystream
   uint32_t keystream[2];
+};
+
+struct snow_tv2 tv2 = {
+  {
+    { 0x0DED7263, 0x109CF92E, 0x3352255A, 0x140E0F76, },
+    { 0x6B68079A, 0x41A7C4C9, 0x1BEFD79F, 0x7FDCC233, },
+  },
+  0x9C0DB3AA,
 };
 
 struct snow_tv snow_tvs[] = {
@@ -122,6 +135,7 @@ print_lfsr(uint32_t *lfsr)
 }
 
 void lfsr_init(uint32_t f, snow_ctx *ctx);
+void lfsr_keystream(snow_ctx *ctx);
 uint32_t clock_fsm(snow_ctx *ctx);
 void snow_init_lfsr_fsm(struct snow_key_st key, snow_ctx *ctx);
 
@@ -134,29 +148,30 @@ main(int argc, char **argv)
 	for (i = 0; i < N_VECTORS; i++) {
     struct snow_tv *tv = snow_tvs+i;
     uint32_t keystream[2];
-    snow_ctx ctx_init;
+    uint32_t z;
     snow_ctx ctx;
 
-    snow_init_lfsr_fsm(tv->key, &ctx_init);
-    if (memcmp(ctx_init.lfsr, tv->lfsr_before_init, sizeof(uint32_t)*SNOW_KEY_SIZE)) {
+    snow_init_lfsr_fsm(tv->key, &ctx);
+    if (memcmp(ctx.lfsr, tv->lfsr_before_init, sizeof(uint32_t)*SNOW_KEY_SIZE)) {
       printf("Error, unexpected lfsr state before inititalization. Expected : \n");
       print_lfsr(tv->lfsr_before_init);
       printf("Got :\n");
-      print_lfsr(ctx_init.lfsr);
+      print_lfsr(ctx.lfsr);
       failed = -1;
       break;
     }
 
-    clock_fsm(&ctx_init);
-    if (memcmp(&ctx_init.fsm, &tv->fsm_after_clock, sizeof(struct fsm_st))) {
+    clock_fsm(&ctx);
+    if (memcmp(&ctx.fsm, &tv->fsm_after_clock, sizeof(struct fsm_st))) {
       printf("Error, unexpected fsm state after first clocking. Expected : \n");
       print_fsm(tv->fsm_after_clock);
       printf("Got :\n");
-      print_fsm(ctx_init.fsm);
+      print_fsm(ctx.fsm);
       failed = -1;
       break;
     }
 
+    memset(&ctx, 0, sizeof(ctx));
     SNOW_set_key(tv->key, &ctx);
     if (memcmp(ctx.lfsr, tv->lfsr_after_init, sizeof(uint32_t)*SNOW_KEY_SIZE)) {
       printf("Error, unexpected lfsr state after inititalization. Expected : \n");
@@ -182,6 +197,23 @@ main(int argc, char **argv)
       printf("0x%08X 0x%08X\n", tv->keystream[0], tv->keystream[1]);
       printf("Got :\n");
       printf("0x%08X 0x%08X\n", keystream[0], keystream[1]);
+      failed = -1;
+      break;
+    }
+
+    memset(&ctx, 0, sizeof(ctx));
+    SNOW_set_key(tv2.key, &ctx);
+    clock_fsm(&ctx);
+    lfsr_keystream(&ctx);
+
+    for (i = 0; i < 2500; i++) {
+      z = clock_fsm(&ctx) ^ ctx.lfsr[0];
+      lfsr_keystream(&ctx);
+    }
+
+    if (z != tv2.z2500) {
+      printf("Error, bad keystream. Expected z2500 = 0x08%X. Got 0x08%X\n",
+          tv2.z2500, z);
       failed = -1;
       break;
     }
