@@ -133,11 +133,12 @@ main(int argc, char **argv)
 
 	for (i = 0; i < N_VECTORS; i++) {
     struct snow_tv *tv = snow_tvs+i;
+    uint32_t keystream[2];
     snow_ctx ctx_init;
     snow_ctx ctx;
 
     snow_init_lfsr_fsm(tv->key, &ctx_init);
-    if (memcmp(&ctx_init.lfsr, &tv->lfsr_before_init, sizeof(uint32_t)*SNOW_KEY_SIZE)) {
+    if (memcmp(ctx_init.lfsr, tv->lfsr_before_init, sizeof(uint32_t)*SNOW_KEY_SIZE)) {
       printf("Error, unexpected lfsr state before inititalization. Expected : \n");
       print_lfsr(tv->lfsr_before_init);
       printf("Got :\n");
@@ -157,11 +158,30 @@ main(int argc, char **argv)
     }
 
     SNOW_set_key(tv->key, &ctx);
-    if (memcmp(&ctx.lfsr, &tv->lfsr_after_init, sizeof(uint32_t)*SNOW_KEY_SIZE)) {
+    if (memcmp(ctx.lfsr, tv->lfsr_after_init, sizeof(uint32_t)*SNOW_KEY_SIZE)) {
       printf("Error, unexpected lfsr state after inititalization. Expected : \n");
       print_lfsr(tv->lfsr_after_init);
       printf("Got :\n");
       print_lfsr(ctx.lfsr);
+      failed = -1;
+      break;
+    }
+
+    if (memcmp(&ctx.fsm, &tv->fsm_after_init, sizeof(struct fsm_st))) {
+      printf("Error, unexpected fsm state after inititalization. Expected : \n");
+      print_fsm(tv->fsm_after_init);
+      printf("Got :\n");
+      print_fsm(ctx.fsm);
+      failed = -1;
+      break;
+    }
+
+    SNOW_gen_keystream(keystream, sizeof(keystream)/sizeof(*keystream), &ctx);
+    if (memcmp(keystream, tv->keystream, sizeof(keystream)/sizeof(*keystream))) {
+      printf("Error, unexpected keystream. Expected : \n");
+      printf("0x%08X 0x%08X\n", tv->keystream[0], tv->keystream[1]);
+      printf("Got :\n");
+      printf("0x%08X 0x%08X\n", keystream[0], keystream[1]);
       failed = -1;
       break;
     }
