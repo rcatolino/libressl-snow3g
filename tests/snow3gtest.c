@@ -36,9 +36,9 @@ struct snow_tv {
   struct fsm_st fsm_after_init;
   // First words from keystream
   uint32_t keystream[2];
-}
+};
 
-struct snow_tv[] = {
+struct snow_tv tvs[] = {
   {
     {
       { 0x2BD6459F, 0x82C5B300, 0x952C4910, 0x4881FF48, },
