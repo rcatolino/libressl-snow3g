@@ -724,15 +724,12 @@ S2(uint32_t in)
 void
 lfsr_init(uint32_t f, snow_ctx *ctx)
 {
-  uint32_t s0 = ctx->lfsr[0];
-  uint32_t s1 = ctx->lfsr[1];
-  uint32_t s2 = ctx->lfsr[2];
   uint32_t v = (
-      ((s0 << 8) & 0xffffff00) ^
-      MULalpha[BYTE32(s0, 0)] ^
-      s2 ^
-      ((s1 >> 8) & 0x00ffffff) ^
-      DIValpha[BYTE32(s1, 3)] ^
+      ((ctx->lfsr[0] << 8) & 0xffffff00) ^
+      MULalpha[BYTE32(ctx->lfsr[0], 0)] ^
+      ctx->lfsr[2] ^
+      ((ctx->lfsr[11] >> 8) & 0x00ffffff) ^
+      DIValpha[BYTE32(ctx->lfsr[11], 3)] ^
       f
   );
   // TODO replace shift with memmove ?
