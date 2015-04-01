@@ -888,11 +888,11 @@ SNOW_gen_keystream(uint32_t *stream, size_t nb_word, snow_ctx *ctx)
 }
 
 void
-SNOW(size_t nb_bit, const unsigned char *in, unsigned char *out, snow_ctx *ctx)
+SNOW(size_t nb_byte, const unsigned char *in, unsigned char *out, snow_ctx *ctx)
 {
   size_t i = 0;
-  size_t nb_word = nb_bit/32;
-  size_t r = nb_bit % 32;
+  size_t nb_word = nb_byte/4;
+  size_t r = nb_byte % 4;
   uint32_t *in_word = (uint32_t*) in;
   uint32_t *out_word = (uint32_t*) out;
   assert(ctx != NULL);
@@ -910,19 +910,16 @@ SNOW(size_t nb_bit, const unsigned char *in, unsigned char *out, snow_ctx *ctx)
     lfsr_keystream(ctx);
   }
 
-  /* clocking */
   if (r) {
     uint32_t f;
     uint32_t last_out = 0;
     uint32_t last_in = 0;
     /* mask with the r most significant bits at 1, the rest at 0 */
-    uint32_t mask = ~((1 << (32 - r)) - 1);
-    size_t bytes_left = r / 8 + (r % 8 ? 1 : 0);
 
-    memcpy(&last_in, in, bytes_left);
+    memcpy(&last_in, in + nb_word*4, r);
     f = clock_fsm(ctx) ^ ctx->lfsr[0];
-    last_out = htobe32((be32toh(last_in) ^ f) & mask);
-    memcpy(out+nb_word, &last_out, bytes_left);
+    last_out = last_in ^ be32toh(f);
+    memcpy(out + nb_word*4, &last_out, r);
     lfsr_keystream(ctx);
   }
 }
