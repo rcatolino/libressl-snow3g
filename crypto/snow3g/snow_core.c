@@ -801,9 +801,23 @@ clock_fsm(snow_ctx *ctx)
 /* reinterpret a char array as big-endian 32 bit unsigned integer array
  * and select the element at index i.
  */
-#define WORD_128(array, i) htobe32(((uint32_t *)array)[i]);
+#define WORD_128(array, i) be32toh(((uint32_t *)array)[i]);
 
-void snow_init_lfsr_fsm(struct snow_key_st key, snow_ctx *ctx)
+struct snow_key_st
+snow_array_to_key(const unsigned char *key, const unsigned char *iv)
+{
+  int i;
+  struct snow_key_st key_iv;
+  for (i = 0; i < 4; i++) {
+    key_iv.key[i] = WORD_128(key, i);
+    key_iv.iv[i] = WORD_128(iv, i);
+  }
+
+  return key_iv;
+}
+
+void
+snow_init_lfsr_fsm(struct snow_key_st key, snow_ctx *ctx)
 {
   assert(ctx!= NULL);
 
@@ -839,19 +853,19 @@ SNOW_set_key(struct snow_key_st key, snow_ctx *ctx)
 }
 
 void
-SNOW_init(uint32_t countc, uint8_t bearer, uint8_t direction, const char *key,
-    snow_ctx *ctx)
+SNOW_init(uint32_t countc, uint8_t bearer, uint8_t direction,
+    const char *confidentiality_key, snow_ctx *ctx)
 {
   assert(ctx != NULL);
   struct snow_key_st snow_key;
-  memset(&snow_key, 0, sizeof(key));
-  snow_key.key[3] = WORD_128(key, 0);
-  snow_key.key[2] = WORD_128(key, 1);
-  snow_key.key[1] = WORD_128(key, 2);
-  snow_key.key[0] = WORD_128(key, 3);
+  memset(&snow_key, 0, sizeof(snow_key));
+  snow_key.key[3] = WORD_128(confidentiality_key, 0);
+  snow_key.key[2] = WORD_128(confidentiality_key, 1);
+  snow_key.key[1] = WORD_128(confidentiality_key, 2);
+  snow_key.key[0] = WORD_128(confidentiality_key, 3);
 
   snow_key.iv[3] = countc;
-  snow_key.iv[2] = ((bearer & 0x1F) << 3) | ((direction & 0x01) << 2);
+  snow_key.iv[2] = ((bearer & 0x1F) << 27) | ((direction & 0x01) << 26);
   snow_key.iv[1] = snow_key.iv[3];
   snow_key.iv[0] = snow_key.iv[2];
 

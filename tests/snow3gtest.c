@@ -44,6 +44,15 @@ struct snow_tv {
   uint32_t keystream[2];
 };
 
+struct uea2_tv {
+  uint32_t countc;
+  uint8_t bearer;
+  uint8_t direction;
+  char confidentiality_key[SNOW_KEY_SIZE];
+  uint32_t keystream[32];
+  ssize_t nb_word;
+};
+
 struct snow_tv2 tv2 = {
   {
     { 0x0DED7263, 0x109CF92E, 0x3352255A, 0x140E0F76, },
@@ -118,6 +127,23 @@ struct snow_tv snow_tvs[] = {
   },
 };
 
+struct uea2_tv uea2_test = {
+  0x72A4F20F,
+  0x0C,
+  1,
+  { 0x2B, 0xD6, 0x45, 0x9F, 0x82, 0xC5, 0xB3, 0x00,
+    0x95, 0x2C, 0x49, 0x10, 0x48, 0x81, 0xFF, 0x48 },
+  { 0xF22DB45B,  0x37E71C5B,  0x4EB6F404,  0xCD886C15,
+    0x9DCA27B1,  0xF062AF46,  0xF8E2F587,  0x8976E8B8,
+    0x33E2B848,  0xE798969D,  0x85E5961A,  0x057983F1,
+    0x10F55076,  0x71185285,  0xD53CED16,  0xFD580500,
+    0x7BEE12BE,  0x1C5C52EC,  0x78C12E8A,  0xC5B1B9D5,
+    0x3BF90900,  0xDF06DF63,  0x3C3C15D5,  0xC270DE52,
+    0xFB4D09C3,
+  },
+  25,
+};
+
 #define N_VECTORS (sizeof(snow_tvs) / sizeof(*snow_tvs))
 
 void
@@ -144,6 +170,8 @@ main(int argc, char **argv)
 {
   size_t i;
   int failed = 0;
+  snow_ctx uea2_ctx;
+  uint32_t uea2_keystream[25];
 
 	for (i = 0; i < N_VECTORS; i++) {
     struct snow_tv *tv = snow_tvs+i;
@@ -151,6 +179,7 @@ main(int argc, char **argv)
     uint32_t z;
     snow_ctx ctx;
 
+    /* Test the init steps individually */
     snow_init_lfsr_fsm(tv->key, &ctx);
     if (memcmp(ctx.lfsr, tv->lfsr_before_init, sizeof(uint32_t)*SNOW_KEY_SIZE)) {
       printf("Error, unexpected lfsr state before inititalization. Expected : \n");
@@ -171,6 +200,7 @@ main(int argc, char **argv)
       break;
     }
 
+    /* Test the snow initialization as whole */
     memset(&ctx, 0, sizeof(ctx));
     SNOW_set_key(tv->key, &ctx);
     if (memcmp(ctx.lfsr, tv->lfsr_after_init, sizeof(uint32_t)*SNOW_KEY_SIZE)) {
@@ -191,8 +221,9 @@ main(int argc, char **argv)
       break;
     }
 
+    /* Tests on the actual keystream */
     SNOW_gen_keystream(keystream, sizeof(keystream)/sizeof(*keystream), &ctx);
-    if (memcmp(keystream, tv->keystream, sizeof(keystream)/sizeof(*keystream))) {
+    if (memcmp(keystream, tv->keystream, sizeof(keystream))) {
       printf("Error, unexpected keystream. Expected : \n");
       printf("0x%08X 0x%08X\n", tv->keystream[0], tv->keystream[1]);
       printf("Got :\n");
@@ -217,6 +248,42 @@ main(int argc, char **argv)
       failed = -1;
       break;
     }
+  }
+
+  /* Test the snow cipher as the UEA2 algorithm */
+  /* SNOW_init(uea2_test.countc, uea2_test.bearer, uea2_test.direction,
+      uea2_test.confidentiality_key, &uea2_ctx); */
+
+  // TODO FINISH
+  struct snow_key_st snow_key;
+  memset(&snow_key, 0, sizeof(snow_key));
+
+#define WORD_128(array, i) be32toh(((uint32_t *)array)[i]);
+  snow_key.key[3] = WORD_128(uea2_test.confidentiality_key, 0);
+  snow_key.key[2] = WORD_128(uea2_test.confidentiality_key, 1);
+  snow_key.key[1] = WORD_128(uea2_test.confidentiality_key, 2);
+  snow_key.key[0] = WORD_128(uea2_test.confidentiality_key, 3);
+
+  printf("0x%08X 0x%08X 0x%08X 0x%08X\n", snow_key.key[0], snow_key.key[1],
+      snow_key.key[2], snow_key.key[3]);
+
+  snow_key.iv[3] = uea2_test.countc;
+  snow_key.iv[2] = ((uea2_test.bearer & 0x1F) << 27) | ((uea2_test.direction & 0x01) << 26);
+  snow_key.iv[1] = snow_key.iv[3];
+  snow_key.iv[0] = snow_key.iv[2];
+
+  printf("0x%08X 0x%08X 0x%08X 0x%08X\n", snow_key.iv[0], snow_key.iv[1],
+      snow_key.iv[2], snow_key.iv[3]);
+
+  SNOW_set_key(snow_key, &uea2_ctx);
+  SNOW_gen_keystream(uea2_keystream, uea2_test.nb_word, &uea2_ctx);
+  for (int i = 0; i < uea2_test.nb_word; i++) {
+    printf("0x%08X | 0x%08X\n", uea2_keystream[i], uea2_test.keystream[i]);
+  }
+
+  if (memcmp(uea2_keystream, uea2_test.keystream, sizeof(uea2_keystream))) {
+    printf("Error, bad keystream for uea2.\n");
+    failed = -1;
   }
 
   return failed;

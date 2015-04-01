@@ -10,3 +10,5 @@ cat test-fsm | sed -e 's/^\s/0x/g;N;N;s/\n\s/, 0x/g' | sed -e 's/^/{ /;s/$/, },/
 
 cat test-output | sed -e 's/\s//g;s/^/0x/' | sed -e 'N;s/\n/, /g' | sed -e 's/^/{ /;s/$/, },/'
 
+cat test-uea2 | sed -e 's/[0-9A-F]\{8\}/0x&, /g'
+

@@ -17,7 +17,7 @@
  * 3. All advertising materials mentioning features or use of this
  *    software must display the following acknowledgment:
  *    "This product includes software developed by the OpenSSL Project
- *    for use in the OpenSSL Toolkit. (http://www.openssl.org/)"
+ *    for use in the OpenSSL Toolkit. (http:
  *
  * 4. The names "OpenSSL Toolkit" and "OpenSSL Project" must not be used to
  *    endorse or promote products derived from this software without
@@ -31,7 +31,7 @@
  * 6. Redistributions of any form whatsoever must retain the following
  *    acknowledgment:
  *    "This product includes software developed by the OpenSSL Project
- *    for use in the OpenSSL Toolkit (http://www.openssl.org/)"
+ *    for use in the OpenSSL Toolkit (http:
  *
  * THIS SOFTWARE IS PROVIDED BY THE OpenSSL PROJECT ``AS IS'' AND ANY
  * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -86,6 +86,9 @@ typedef struct snow_ctx_st {
   struct fsm_st fsm;
 } snow_ctx;
 
+struct snow_key_st
+snow_array_to_key(const unsigned char key[16], const unsigned char iv[16]);
+
 void
 SNOW_set_key(struct snow_key_st, snow_ctx *ctx);
 
@@ -93,8 +96,8 @@ void
 SNOW_gen_keystream(uint32_t *stream, size_t nb_word, snow_ctx *ctx);
 
 void
-SNOW_init(uint32_t countc, uint8_t bearer, uint8_t direction, const char *key,
-    snow_ctx *ctx);
+SNOW_init(uint32_t countc, uint8_t bearer, uint8_t direction,
+    const char *confidentiality_key, snow_ctx *ctx);
 
 #ifdef  __cplusplus
 }
