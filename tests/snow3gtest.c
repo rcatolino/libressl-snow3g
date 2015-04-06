@@ -203,19 +203,12 @@ uint32_t clock_fsm(snow_ctx *ctx);
 void snow_init_lfsr_fsm(struct snow_key_st key, snow_ctx *ctx);
 
 int
-main(int argc, char **argv)
+test_snow_inner()
 {
-  size_t i;
   int failed = 0;
-  snow_ctx uea2_ctx;
-  snow_ctx tv3_ctx;
-  uint32_t uea2_keystream[25];
-  unsigned char tv3_result[tv3.nb_byte];
-
-	for (i = 0; i < N_VECTORS; i++) {
+	for (int i = 0; i < N_VECTORS; i++) {
     struct snow_tv *tv = snow_tvs+i;
     uint32_t keystream[2];
-    uint32_t z;
     snow_ctx ctx;
 
     /* Test the init steps individually */
@@ -239,7 +232,7 @@ main(int argc, char **argv)
       break;
     }
 
-    /* Test the snow initialization as whole */
+    /* Test the whole snow initialization */
     memset(&ctx, 0, sizeof(ctx));
     SNOW_set_key(tv->key, &ctx);
     if (memcmp(ctx.lfsr, tv->lfsr_after_init, sizeof(uint32_t)*SNOW_KEY_SIZE)) {
@@ -270,39 +263,53 @@ main(int argc, char **argv)
       failed = -1;
       break;
     }
-
-    memset(&ctx, 0, sizeof(ctx));
-    SNOW_set_key(tv2.key, &ctx);
-    clock_fsm(&ctx);
-    lfsr_keystream(&ctx);
-
-    for (i = 0; i < 2500; i++) {
-      z = clock_fsm(&ctx) ^ ctx.lfsr[0];
-      lfsr_keystream(&ctx);
-    }
-
-    if (z != tv2.z2500) {
-      printf("Error, bad keystream. Expected z2500 = 0x08%X. Got 0x08%X\n",
-          tv2.z2500, z);
-      failed = -1;
-      break;
-    }
   }
 
-  /* Test the uea2 algorithm */
+  return failed;
+}
+
+int
+test_snow_keystream()
+{
+  int failed = 0;
+  uint32_t z;
+  snow_ctx ctx;
+
+  memset(&ctx, 0, sizeof(ctx));
+  SNOW_set_key(tv2.key, &ctx);
+  clock_fsm(&ctx);
+  lfsr_keystream(&ctx);
+
+  for (int i = 0; i < 2500; i++) {
+    z = clock_fsm(&ctx) ^ ctx.lfsr[0];
+    lfsr_keystream(&ctx);
+  }
+
+  if (z != tv2.z2500) {
+    printf("Error, bad keystream. Expected z2500 = 0x08%X. Got 0x08%X\n",
+        tv2.z2500, z);
+    failed = -1;
+  }
+
+  return failed;
+}
+
+int
+test_uea2()
+{
+  int failed = 0;
   struct snow_key_st snow_key;
-  memset(&snow_key, 0, sizeof(snow_key));
+  uint32_t uea2_keystream[25];
+  snow_ctx ctx;
 
   // first part : key
-
 #define WORD_128(array, i) be32toh(((uint32_t *)array)[i]);
+
+  memset(&snow_key, 0, sizeof(snow_key));
   snow_key.key[3] = WORD_128(uea2_test.confidentiality_key, 0);
   snow_key.key[2] = WORD_128(uea2_test.confidentiality_key, 1);
   snow_key.key[1] = WORD_128(uea2_test.confidentiality_key, 2);
   snow_key.key[0] = WORD_128(uea2_test.confidentiality_key, 3);
-
-  printf("0x%08X 0x%08X 0x%08X 0x%08X\n", snow_key.key[0], snow_key.key[1],
-      snow_key.key[2], snow_key.key[3]);
 
   // second part : iv
   snow_key.iv[3] = uea2_test.countc;
@@ -310,11 +317,8 @@ main(int argc, char **argv)
   snow_key.iv[1] = snow_key.iv[3];
   snow_key.iv[0] = snow_key.iv[2];
 
-  printf("0x%08X 0x%08X 0x%08X 0x%08X\n", snow_key.iv[0], snow_key.iv[1],
-      snow_key.iv[2], snow_key.iv[3]);
-
-  SNOW_set_key(snow_key, &uea2_ctx);
-  SNOW_gen_keystream(uea2_keystream, uea2_test.nb_word, &uea2_ctx);
+  SNOW_set_key(snow_key, &ctx);
+  SNOW_gen_keystream(uea2_keystream, uea2_test.nb_word, &ctx);
 
   if (memcmp(uea2_keystream, uea2_test.keystream, sizeof(uea2_keystream))) {
     printf("Error, bad keystream for uea2.\n");
@@ -325,18 +329,34 @@ main(int argc, char **argv)
     failed = -1;
   }
 
-  /* Test the snow cipher encryption */
+  return failed;
+}
 
-  memset(tv3_result, 0, sizeof(tv3_result));
-  SNOW_set_key(tv3.key, &tv3_ctx);
-  SNOW(tv3.nb_byte, tv3.plaintext, tv3_result, &tv3_ctx);
-  if (memcmp(tv3.ciphertext, tv3_result, tv3.nb_byte)) {
+int
+test_snow_evp()
+{
+  int failed = 0;
+  snow_ctx ctx;
+  unsigned char cipher[tv3.nb_byte];
+  memset(cipher, 0, sizeof(cipher));
+  SNOW_set_key(tv3.key, &ctx);
+  SNOW(tv3.nb_byte, tv3.plaintext, cipher, &ctx);
+  if (memcmp(tv3.ciphertext, cipher, tv3.nb_byte)) {
     printf("Error, bad ciphertext for tv3\n");
     printf("Got        | Expected\n");
     for (int i = 0; i < tv3.nb_byte; i++) {
-      printf("0x%02hhX | 0x%02hhX\n", tv3_result[i], tv3.ciphertext[i]);
+      printf("0x%02hhX | 0x%02hhX\n", cipher[i], tv3.ciphertext[i]);
     }
+
     failed = -1;
   }
+
   return failed;
+}
+
+int
+main(int argc, char **argv)
+{
+  return test_snow_inner() + test_snow_keystream() +
+    test_uea2() + test_snow_evp();
 }
