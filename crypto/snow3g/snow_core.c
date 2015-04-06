@@ -896,8 +896,8 @@ SNOW(size_t nb_byte, const unsigned char *in, unsigned char *out, snow_ctx *ctx)
   uint32_t *in_word = (uint32_t*) in;
   uint32_t *out_word = (uint32_t*) out;
   assert(ctx != NULL);
-  assert(in!= NULL);
-  assert(out!= NULL);
+  assert(in != NULL);
+  assert(out != NULL);
 
   /* init */
   clock_fsm(ctx);
@@ -914,10 +914,9 @@ SNOW(size_t nb_byte, const unsigned char *in, unsigned char *out, snow_ctx *ctx)
     uint32_t f;
     uint32_t last_out = 0;
     uint32_t last_in = 0;
-    /* mask with the r most significant bits at 1, the rest at 0 */
 
-    memcpy(&last_in, in + nb_word*4, r);
     f = clock_fsm(ctx) ^ ctx->lfsr[0];
+    memcpy(&last_in, in + nb_word*4, r);
     last_out = last_in ^ be32toh(f);
     memcpy(out + nb_word*4, &last_out, r);
     lfsr_keystream(ctx);

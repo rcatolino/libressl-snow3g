@@ -50,7 +50,44 @@ struct uea2_tv {
   uint8_t direction;
   char confidentiality_key[SNOW_KEY_SIZE];
   uint32_t keystream[32];
-  ssize_t nb_word;
+  size_t nb_word;
+};
+
+struct enc_dec_tv {
+  struct snow_key_st key;
+  unsigned char plaintext[99];
+  unsigned char ciphertext[99];
+  size_t nb_byte;
+};
+
+struct enc_dec_tv tv3 = {
+  {
+    { 0x4881FF48, 0x952C4910, 0x82C5B300, 0x2BD6459F, },
+    { 0x64000000, 0x72A4F20F, 0x64000000, 0x72A4F20F, },
+  },
+  {
+    0x7E, 0xC6, 0x12, 0x72, 0x74, 0x3B, 0xF1, 0x61, 0x47, 0x26, 0x44, 0x6A,
+    0x6C, 0x38, 0xCE, 0xD1, 0x66, 0xF6, 0xCA, 0x76, 0xEB, 0x54, 0x30, 0x04,
+    0x42, 0x86, 0x34, 0x6C, 0xEF, 0x13, 0x0F, 0x92, 0x92, 0x2B, 0x03, 0x45,
+    0x0D, 0x3A, 0x99, 0x75, 0xE5, 0xBD, 0x2E, 0xA0, 0xEB, 0x55, 0xAD, 0x8E,
+    0x1B, 0x19, 0x9E, 0x3E, 0xC4, 0x31, 0x60, 0x20, 0xE9, 0xA1, 0xB2, 0x85,
+    0xE7, 0x62, 0x79, 0x53, 0x59, 0xB7, 0xBD, 0xFD, 0x39, 0xBE, 0xF4, 0xB2,
+    0x48, 0x45, 0x83, 0xD5, 0xAF, 0xE0, 0x82, 0xAE, 0xE6, 0x38, 0xBF, 0x5F,
+    0xD5, 0xA6, 0x06, 0x19, 0x39, 0x01, 0xA0, 0x8F, 0x4A, 0xB4, 0x1A, 0xAB,
+    0x9B, 0x13, 0x48,
+  },
+  {
+    0x8C, 0xEB, 0xA6, 0x29, 0x43, 0xDC, 0xED, 0x3A, 0x09, 0x90, 0xB0, 0x6E,
+    0xA1, 0xB0, 0xA2, 0xC4, 0xFB, 0x3C, 0xED, 0xC7, 0x1B, 0x36, 0x9F, 0x42,
+    0xBA, 0x64, 0xC1, 0xEB, 0x66, 0x65, 0xE7, 0x2A, 0xA1, 0xC9, 0xBB, 0x0D,
+    0xEA, 0xA2, 0x0F, 0xE8, 0x60, 0x58, 0xB8, 0xBA, 0xEE, 0x2C, 0x2E, 0x7F,
+    0x0B, 0xEC, 0xCE, 0x48, 0xB5, 0x29, 0x32, 0xA5, 0x3C, 0x9D, 0x5F, 0x93,
+    0x1A, 0x3A, 0x7C, 0x53, 0x22, 0x59, 0xAF, 0x43, 0x25, 0xE2, 0xA6, 0x5E,
+    0x30, 0x84, 0xAD, 0x5F, 0x6A, 0x51, 0x3B, 0x7B, 0xDD, 0xC1, 0xB6, 0x5F,
+    0x0A, 0xA0, 0xD9, 0x7A, 0x05, 0x3D, 0xB5, 0x5A, 0x88, 0xC4, 0xC4, 0xF9,
+    0x60, 0x5E, 0x41,
+  },
+  99
 };
 
 struct snow_tv2 tv2 = {
@@ -171,7 +208,9 @@ main(int argc, char **argv)
   size_t i;
   int failed = 0;
   snow_ctx uea2_ctx;
+  snow_ctx tv3_ctx;
   uint32_t uea2_keystream[25];
+  unsigned char tv3_result[tv3.nb_byte];
 
 	for (i = 0; i < N_VECTORS; i++) {
     struct snow_tv *tv = snow_tvs+i;
@@ -221,7 +260,7 @@ main(int argc, char **argv)
       break;
     }
 
-    /* Tests on the actual keystream */
+    /* Tests on the actual keystream generation */
     SNOW_gen_keystream(keystream, sizeof(keystream)/sizeof(*keystream), &ctx);
     if (memcmp(keystream, tv->keystream, sizeof(keystream))) {
       printf("Error, unexpected keystream. Expected : \n");
@@ -250,13 +289,11 @@ main(int argc, char **argv)
     }
   }
 
-  /* Test the snow cipher as the UEA2 algorithm */
-  /* SNOW_init(uea2_test.countc, uea2_test.bearer, uea2_test.direction,
-      uea2_test.confidentiality_key, &uea2_ctx); */
-
-  // TODO FINISH
+  /* Test the uea2 algorithm */
   struct snow_key_st snow_key;
   memset(&snow_key, 0, sizeof(snow_key));
+
+  // first part : key
 
 #define WORD_128(array, i) be32toh(((uint32_t *)array)[i]);
   snow_key.key[3] = WORD_128(uea2_test.confidentiality_key, 0);
@@ -267,6 +304,7 @@ main(int argc, char **argv)
   printf("0x%08X 0x%08X 0x%08X 0x%08X\n", snow_key.key[0], snow_key.key[1],
       snow_key.key[2], snow_key.key[3]);
 
+  // second part : iv
   snow_key.iv[3] = uea2_test.countc;
   snow_key.iv[2] = ((uea2_test.bearer & 0x1F) << 27) | ((uea2_test.direction & 0x01) << 26);
   snow_key.iv[1] = snow_key.iv[3];
@@ -277,14 +315,28 @@ main(int argc, char **argv)
 
   SNOW_set_key(snow_key, &uea2_ctx);
   SNOW_gen_keystream(uea2_keystream, uea2_test.nb_word, &uea2_ctx);
-  for (int i = 0; i < uea2_test.nb_word; i++) {
-    printf("0x%08X | 0x%08X\n", uea2_keystream[i], uea2_test.keystream[i]);
-  }
 
   if (memcmp(uea2_keystream, uea2_test.keystream, sizeof(uea2_keystream))) {
     printf("Error, bad keystream for uea2.\n");
+    printf("Got        | Expected\n");
+    for (int i = 0; i < uea2_test.nb_word; i++) {
+      printf("0x%08X | 0x%08X\n", uea2_keystream[i], uea2_test.keystream[i]);
+    }
     failed = -1;
   }
 
+  /* Test the snow cipher encryption */
+
+  memset(tv3_result, 0, sizeof(tv3_result));
+  SNOW_set_key(tv3.key, &tv3_ctx);
+  SNOW(tv3.nb_byte, tv3.plaintext, tv3_result, &tv3_ctx);
+  if (memcmp(tv3.ciphertext, tv3_result, tv3.nb_byte)) {
+    printf("Error, bad ciphertext for tv3\n");
+    printf("Got        | Expected\n");
+    for (int i = 0; i < tv3.nb_byte; i++) {
+      printf("0x%02hhX | 0x%02hhX\n", tv3_result[i], tv3.ciphertext[i]);
+    }
+    failed = -1;
+  }
   return failed;
 }

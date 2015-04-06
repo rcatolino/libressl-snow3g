@@ -100,7 +100,7 @@ SNOW_init(uint32_t countc, uint8_t bearer, uint8_t direction,
     const char *confidentiality_key, snow_ctx *ctx);
 
 void
-SNOW(size_t nb_bit, const unsigned char *in, unsigned char *out, snow_ctx *ctx);
+SNOW(size_t nb_byte, const unsigned char *in, unsigned char *out, snow_ctx *ctx);
 
 #ifdef  __cplusplus
 }
