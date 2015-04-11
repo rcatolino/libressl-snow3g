@@ -54,6 +54,8 @@ struct uea2_tv {
 };
 
 struct enc_dec_tv {
+  unsigned char key_array[16];
+  unsigned char iv_array[16];
   struct snow_key_st key;
   unsigned char plaintext[99];
   unsigned char ciphertext[99];
@@ -61,9 +63,13 @@ struct enc_dec_tv {
 };
 
 struct enc_dec_tv tv3 = {
+  { 0x48, 0x81, 0xFF, 0x48, 0x95, 0x2C, 0x49, 0x10,
+    0x82, 0xC5, 0xB3, 0x00, 0x2B, 0xD6, 0x45, 0x9F },
+  { 0x64, 0x00, 0x00, 0x00, 0x72, 0xA4, 0xF2, 0x0F,
+    0x64, 0x00, 0x00, 0x00, 0x72, 0xA4, 0xF2, 0x0F },
   {
-    { 0x4881FF48, 0x952C4910, 0x82C5B300, 0x2BD6459F, },
-    { 0x64000000, 0x72A4F20F, 0x64000000, 0x72A4F20F, },
+    { 0x4881FF48, 0x952C4910, 0x82C5B300, 0x2BD6459F },
+    { 0x64000000, 0x72A4F20F, 0x64000000, 0x72A4F20F },
   },
   {
     0x7E, 0xC6, 0x12, 0x72, 0x74, 0x3B, 0xF1, 0x61, 0x47, 0x26, 0x44, 0x6A,
@@ -339,16 +345,23 @@ test_snow_evp()
   snow_ctx ctx;
   unsigned char cipher[tv3.nb_byte];
   memset(cipher, 0, sizeof(cipher));
-  SNOW_set_key(tv3.key, &ctx);
-  SNOW(tv3.nb_byte, tv3.plaintext, cipher, &ctx);
-  if (memcmp(tv3.ciphertext, cipher, tv3.nb_byte)) {
-    printf("Error, bad ciphertext for tv3\n");
-    printf("Got        | Expected\n");
-    for (int i = 0; i < tv3.nb_byte; i++) {
-      printf("0x%02hhX | 0x%02hhX\n", cipher[i], tv3.ciphertext[i]);
-    }
 
+  struct snow_key_st key_iv = snow_array_to_key(tv3.key_array, tv3.iv_array);
+  if (memcmp(&tv3.key, &key_iv, sizeof(key_iv))) {
+    printf("Error bad conversion from array to key_st");
     failed = -1;
+  } else {
+    SNOW_set_key(tv3.key, &ctx);
+    SNOW(tv3.nb_byte, tv3.plaintext, cipher, &ctx);
+    if (memcmp(tv3.ciphertext, cipher, tv3.nb_byte)) {
+      printf("Error, bad ciphertext for tv3\n");
+      printf("Got        | Expected\n");
+      for (int i = 0; i < tv3.nb_byte; i++) {
+        printf("0x%02hhX | 0x%02hhX\n", cipher[i], tv3.ciphertext[i]);
+      }
+
+      failed = -1;
+    }
   }
 
   return failed;
