@@ -722,7 +722,7 @@ S2(uint32_t in)
 
 /* Clocking operations */
 void
-lfsr_init(uint32_t f, snow_ctx *ctx)
+lfsr_init(uint32_t f, SNOW_CTX *ctx)
 {
   uint32_t v = (
       ((ctx->lfsr[0] << 8) & 0xffffff00) ^
@@ -752,7 +752,7 @@ lfsr_init(uint32_t f, snow_ctx *ctx)
 }
 
 void
-lfsr_keystream(snow_ctx *ctx)
+lfsr_keystream(SNOW_CTX *ctx)
 {
   uint32_t s0 = ctx->lfsr[0];
   uint32_t s2 = ctx->lfsr[2];
@@ -784,7 +784,7 @@ lfsr_keystream(snow_ctx *ctx)
 }
 
 uint32_t
-clock_fsm(snow_ctx *ctx)
+clock_fsm(SNOW_CTX *ctx)
 {
   uint32_t f = (ctx->lfsr[15] + ctx->fsm.r1) ^ ctx->fsm.r2;
   uint32_t r = ctx->fsm.r2 + (ctx->fsm.r3 ^ ctx->lfsr[5]);
@@ -817,7 +817,7 @@ snow_array_to_key(const unsigned char *key, const unsigned char *iv)
 }
 
 void
-snow_init_lfsr_fsm(struct snow_key_st key, snow_ctx *ctx)
+snow_init_lfsr_fsm(struct snow_key_st key, SNOW_CTX *ctx)
 {
   assert(ctx!= NULL);
 
@@ -841,7 +841,7 @@ snow_init_lfsr_fsm(struct snow_key_st key, snow_ctx *ctx)
 }
 
 void
-SNOW_set_key(struct snow_key_st key, snow_ctx *ctx)
+SNOW_set_key(struct snow_key_st key, SNOW_CTX *ctx)
 {
   assert(ctx!= NULL);
   int i = 0;
@@ -854,7 +854,7 @@ SNOW_set_key(struct snow_key_st key, snow_ctx *ctx)
 
 void
 SNOW_init(uint32_t countc, uint8_t bearer, uint8_t direction,
-    const char *confidentiality_key, snow_ctx *ctx)
+    const char *confidentiality_key, SNOW_CTX *ctx)
 {
   assert(ctx != NULL);
   struct snow_key_st snow_key;
@@ -873,7 +873,7 @@ SNOW_init(uint32_t countc, uint8_t bearer, uint8_t direction,
 }
 
 void
-SNOW_gen_keystream(uint32_t *stream, size_t nb_word, snow_ctx *ctx)
+SNOW_gen_keystream(uint32_t *stream, size_t nb_word, SNOW_CTX *ctx)
 {
   size_t i = 0;
   assert(ctx != NULL);
@@ -888,7 +888,7 @@ SNOW_gen_keystream(uint32_t *stream, size_t nb_word, snow_ctx *ctx)
 }
 
 void
-SNOW(size_t nb_byte, const unsigned char *in, unsigned char *out, snow_ctx *ctx)
+SNOW(size_t nb_byte, const unsigned char *in, unsigned char *out, SNOW_CTX *ctx)
 {
   size_t i = 0;
   size_t nb_word = nb_byte/4;

@@ -203,10 +203,10 @@ print_lfsr(uint32_t *lfsr)
   }
 }
 
-void lfsr_init(uint32_t f, snow_ctx *ctx);
-void lfsr_keystream(snow_ctx *ctx);
-uint32_t clock_fsm(snow_ctx *ctx);
-void snow_init_lfsr_fsm(struct snow_key_st key, snow_ctx *ctx);
+void lfsr_init(uint32_t f, SNOW_CTX *ctx);
+void lfsr_keystream(SNOW_CTX *ctx);
+uint32_t clock_fsm(SNOW_CTX *ctx);
+void snow_init_lfsr_fsm(struct snow_key_st key, SNOW_CTX *ctx);
 
 int
 test_snow_inner()
@@ -215,7 +215,7 @@ test_snow_inner()
 	for (int i = 0; i < N_VECTORS; i++) {
     struct snow_tv *tv = snow_tvs+i;
     uint32_t keystream[2];
-    snow_ctx ctx;
+    SNOW_CTX ctx;
 
     /* Test the init steps individually */
     snow_init_lfsr_fsm(tv->key, &ctx);
@@ -279,7 +279,7 @@ test_snow_keystream()
 {
   int failed = 0;
   uint32_t z;
-  snow_ctx ctx;
+  SNOW_CTX ctx;
 
   memset(&ctx, 0, sizeof(ctx));
   SNOW_set_key(tv2.key, &ctx);
@@ -306,7 +306,7 @@ test_uea2()
   int failed = 0;
   struct snow_key_st snow_key;
   uint32_t uea2_keystream[25];
-  snow_ctx ctx;
+  SNOW_CTX ctx;
 
   // first part : key
 #define WORD_128(array, i) be32toh(((uint32_t *)array)[i]);
@@ -342,7 +342,7 @@ int
 test_snow_evp()
 {
   int failed = 0;
-  snow_ctx ctx;
+  SNOW_CTX ctx;
   unsigned char cipher[tv3.nb_byte];
   memset(cipher, 0, sizeof(cipher));
 

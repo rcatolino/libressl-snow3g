@@ -41,7 +41,7 @@ static const EVP_CIPHER snow_cipher = {
 	.flags = EVP_CIPH_STREAM_CIPHER,
 	.init = snow3g_init,
 	.do_cipher = snow3g_cipher,
-	.ctx_size = sizeof(snow_ctx)
+	.ctx_size = sizeof(SNOW_CTX)
 };
 
 const EVP_CIPHER *
@@ -55,7 +55,7 @@ snow3g_init(EVP_CIPHER_CTX *ctx, const unsigned char *key,
     const unsigned char *iv, int enc)
 {
   struct snow_key_st key_iv = snow_array_to_key(key, iv);
-  SNOW_set_key(key_iv, (snow_ctx*)ctx->cipher_data);
+  SNOW_set_key(key_iv, (SNOW_CTX*)ctx->cipher_data);
   return 1;
 }
 
@@ -63,7 +63,7 @@ static int
 snow3g_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out, const unsigned char *in,
     size_t len)
 {
-  SNOW(len, in, out, (snow_ctx*)ctx->cipher_data);
+  SNOW(len, in, out, (SNOW_CTX*)ctx->cipher_data);
   return 1;
 }
 
