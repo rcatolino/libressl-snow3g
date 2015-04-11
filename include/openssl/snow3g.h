@@ -59,6 +59,7 @@
 #endif
 
 #include <stddef.h>
+#include <stdint.h>
 
 #define SNOW_ENCRYPT	1
 #define SNOW_DECRYPT	0

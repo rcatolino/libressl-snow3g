@@ -804,6 +804,10 @@ const EVP_CIPHER *EVP_camellia_256_ofb(void);
 const EVP_CIPHER *EVP_chacha20(void);
 #endif
 
+#ifndef OPENSSL_NO_SNOW3G
+const EVP_CIPHER *EVP_snow3g(void);
+#endif
+
 void OPENSSL_add_all_algorithms_noconf(void);
 void OPENSSL_add_all_algorithms_conf(void);
 

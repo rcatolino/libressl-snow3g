@@ -225,4 +225,8 @@ OpenSSL_add_all_ciphers(void)
 #ifndef OPENSSL_NO_CHACHA
 	EVP_add_cipher(EVP_chacha20());
 #endif
+
+#ifndef OPENSSL_NO_SNOW3G
+  EVP_add_cipher(EVP_snow3g());
+#endif
 }

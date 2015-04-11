@@ -412,6 +412,7 @@ libcrypto_la_SOURCES += evp/e_old.c
 libcrypto_la_SOURCES += evp/e_rc2.c
 libcrypto_la_SOURCES += evp/e_rc4.c
 libcrypto_la_SOURCES += evp/e_rc4_hmac_md5.c
+libcrypto_la_SOURCES += evp/e_snow.c
 libcrypto_la_SOURCES += evp/e_xcbc_d.c
 libcrypto_la_SOURCES += evp/encode.c
 libcrypto_la_SOURCES += evp/evp_aead.c
