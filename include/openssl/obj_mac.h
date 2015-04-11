@@ -3703,14 +3703,6 @@
 #define NID_id_GostR3410_94		812
 #define OBJ_id_GostR3410_94		OBJ_cryptopro,20L
 
-#define SN_id_Gost28147_89		"gost89"
-#define LN_id_Gost28147_89		"GOST 28147-89"
-#define NID_id_Gost28147_89		813
-#define OBJ_id_Gost28147_89		OBJ_cryptopro,21L
-
-#define SN_gost89_cnt		"gost89-cnt"
-#define NID_gost89_cnt		814
-
 #define SN_id_Gost28147_89_MAC		"gost-mac"
 #define LN_id_Gost28147_89_MAC		"GOST 28147-89 MAC"
 #define NID_id_Gost28147_89_MAC		815
