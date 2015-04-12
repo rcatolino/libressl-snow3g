@@ -704,7 +704,7 @@ static const uint32_t DIValpha[256] = {
 
 /* Primitives */
 /* Get the i most significant byte out of a 32 bit word */
-#define BYTE32(word, i) ((uint8_t*) &htole32(word))[3-i]
+#define BYTE32(word, i) (uint8_t) ((word >> 8*(3-i)) & 0xff)
 
 uint32_t
 S1(uint32_t in)
