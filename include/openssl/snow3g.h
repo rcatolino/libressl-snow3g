@@ -91,7 +91,7 @@ struct snow_key_st
 snow_array_to_key(const unsigned char key[16], const unsigned char iv[16]);
 
 void
-SNOW_set_key(struct snow_key_st, SNOW_CTX *ctx);
+SNOW_set_key(struct snow_key_st key_iv, SNOW_CTX *ctx);
 
 void
 SNOW_gen_keystream(uint32_t *stream, size_t nb_word, SNOW_CTX *ctx);

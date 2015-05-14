@@ -732,7 +732,6 @@ lfsr_init(uint32_t f, SNOW_CTX *ctx)
       DIValpha[BYTE32(ctx->lfsr[11], 3)] ^
       f
   );
-  // TODO replace shift with memmove ?
   ctx->lfsr[0] = ctx->lfsr[1];
   ctx->lfsr[1] = ctx->lfsr[2];
   ctx->lfsr[2] = ctx->lfsr[3];
