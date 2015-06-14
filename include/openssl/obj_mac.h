@@ -4154,7 +4154,8 @@
 #define NID_id_tc26_signwithdigest_gost3410_2012_512		949
 #define OBJ_id_tc26_signwithdigest_gost3410_2012_512		OBJ_tc26,1L,3L,3L
 
-#define SN_snow3g		"Snow3G"
+#define SN_snow3g		"SNOW3G"
 #define LN_snow3g		"snow3g"
 #define NID_snow3g		950
+#define OBJ_snow3g		OBJ_iso,0L,18033L,4L,1L,2L
 

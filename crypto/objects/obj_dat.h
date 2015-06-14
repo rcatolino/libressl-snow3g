@@ -65,9 +65,9 @@
 #define NUM_NID 951
 #define NUM_SN 944
 #define NUM_LN 944
-#define NUM_OBJ 884
+#define NUM_OBJ 885
 
-static const unsigned char lvalues[6199]={
+static const unsigned char lvalues[6206]={
 0x2A,0x86,0x48,0x86,0xF7,0x0D,               /* [  0] OBJ_rsadsi */
 0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,          /* [  6] OBJ_pkcs */
 0x2A,0x86,0x48,0x86,0xF7,0x0D,0x02,0x02,     /* [ 13] OBJ_md2 */
@@ -946,6 +946,7 @@ static const unsigned char lvalues[6199]={
 0x2A,0x85,0x03,0x07,0x01,0x01,0x01,0x02,     /* [6174] OBJ_id_tc26_gost3410_2012_512 */
 0x2A,0x85,0x03,0x07,0x01,0x01,0x03,0x02,     /* [6182] OBJ_id_tc26_signwithdigest_gost3410_2012_256 */
 0x2A,0x85,0x03,0x07,0x01,0x01,0x03,0x03,     /* [6190] OBJ_id_tc26_signwithdigest_gost3410_2012_512 */
+0x28,0x81,0x8C,0x71,0x04,0x01,0x02,          /* [6198] OBJ_snow3g */
 };
 
 static const ASN1_OBJECT nid_objs[NUM_NID]={
@@ -2483,7 +2484,7 @@ static const ASN1_OBJECT nid_objs[NUM_NID]={
 {"id-tc26-signwithdigest-gost3410-2012-512",
 	"GOST R 34.11-2012 with GOST R 34.10-2012 (512 bit)",
 	NID_id_tc26_signwithdigest_gost3410_2012_512,8,&(lvalues[6190]),0},
-{"Snow3G","snow3g",NID_snow3g,0,NULL,0},
+{"SNOW3G","snow3g",NID_snow3g,7,&(lvalues[6198]),0},
 };
 
 static const unsigned int sn_objs[NUM_SN]={
@@ -2668,9 +2669,9 @@ static const unsigned int sn_objs[NUM_SN]={
 188,	/* "SMIME" */
 167,	/* "SMIME-CAPS" */
 100,	/* "SN" */
+950,	/* "SNOW3G" */
 16,	/* "ST" */
 143,	/* "SXNetID" */
-950,	/* "Snow3G" */
 458,	/* "UID" */
  0,	/* "UNDEF" */
 11,	/* "X500" */
@@ -4715,6 +4716,7 @@ static const unsigned int obj_objs[NUM_OBJ]={
 634,	/* OBJ_setAttr_TokICCsig            2 23 42 3 3 5 1 */
 635,	/* OBJ_setAttr_SecDevSig            2 23 42 3 3 5 2 */
 436,	/* OBJ_ucl                          0 9 2342 19200300 */
+950,	/* OBJ_snow3g                       1 0 18033 4 1 2 */
 820,	/* OBJ_id_Gost28147_89_None_KeyMeshing 1 2 643 2 2 14 0 */
 819,	/* OBJ_id_Gost28147_89_CryptoPro_KeyMeshing 1 2 643 2 2 14 1 */
 845,	/* OBJ_id_GostR3410_94_a            1 2 643 2 2 20 1 */
