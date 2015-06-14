@@ -83,7 +83,5 @@ INSTALL
 /stamp-h2
 
 openbsd/
-man/*.3
-man/*.1
 ChangeLog
 COPYING
